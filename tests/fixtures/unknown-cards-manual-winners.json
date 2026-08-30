@@ -1,0 +1,52 @@
+{
+  "name": "unknown-cards-manual-winners",
+  "description": "Showdown where the villain's cards were never entered, so the recorder picked the winner by hand and the engine pays the pot out as recorded.",
+  "hand": {
+    "v": 1,
+    "id": "7",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "KRW",
+    "blinds": { "sb": "5", "bb": "10" },
+    "seats": 6,
+    "button": 0,
+    "players": [
+      { "seat": 0, "name": "Hero", "stack": "500", "cards": "AhQh", "hero": true },
+      { "seat": 1, "stack": "500" },
+      { "seat": 2, "name": "Villain", "stack": "500" }
+    ],
+    "board": "Qs7d2c4s9h",
+    "winners": [{ "seat": 0, "amount": "235" }],
+    "actions": [
+      { "t": "post", "seat": 1, "kind": "sb", "amount": "5" },
+      { "t": "post", "seat": 2, "kind": "bb", "amount": "10" },
+      { "t": "raise", "seat": 0, "to": "25" },
+      { "t": "fold", "seat": 1 },
+      { "t": "call", "seat": 2, "amount": "25" },
+      { "t": "street", "street": "flop", "cards": "Qs7d2c" },
+      { "t": "check", "seat": 2 },
+      { "t": "bet", "seat": 0, "to": "30" },
+      { "t": "call", "seat": 2, "amount": "30" },
+      { "t": "street", "street": "turn", "cards": "4s" },
+      { "t": "check", "seat": 2 },
+      { "t": "check", "seat": 0 },
+      { "t": "street", "street": "river", "cards": "9h" },
+      { "t": "check", "seat": 2 },
+      { "t": "bet", "seat": 0, "to": "60" },
+      { "t": "call", "seat": 2, "amount": "60" }
+    ]
+  },
+  "expect": {
+    "finalPots": [{ "amount": "235", "eligible": [0, 2] }],
+    "potAfterStreet": {
+      "preflop": "55",
+      "flop": "115",
+      "turn": "115",
+      "river": "235"
+    },
+    "stacksAtEnd": { "0": "385", "1": "495", "2": "385" },
+    "netBySeat": { "0": "120", "1": "-5", "2": "-115" },
+    "winners": [{ "seat": 0, "amount": "235" }],
+    "actingSeatAtStep": { "2": 0, "6": 2 }
+  }
+}

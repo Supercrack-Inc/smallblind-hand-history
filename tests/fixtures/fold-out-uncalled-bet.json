@@ -1,0 +1,54 @@
+{
+  "name": "fold-out-uncalled-bet",
+  "description": "A six-handed open that everyone folds to. The 20 that nobody called is returned to the raiser, who wins the 25 that was actually contested.",
+  "hand": {
+    "v": 1,
+    "id": "4",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "USD",
+    "blinds": { "sb": "5", "bb": "10" },
+    "seats": 6,
+    "button": 0,
+    "players": [
+      { "seat": 0, "stack": "1000" },
+      { "seat": 1, "stack": "1000" },
+      { "seat": 2, "stack": "1000" },
+      { "seat": 3, "name": "Opener", "stack": "1000", "cards": "AhKd", "hero": true },
+      { "seat": 4, "stack": "1000" },
+      { "seat": 5, "stack": "1000" }
+    ],
+    "actions": [
+      { "t": "post", "seat": 1, "kind": "sb", "amount": "5" },
+      { "t": "post", "seat": 2, "kind": "bb", "amount": "10" },
+      { "t": "raise", "seat": 3, "to": "30" },
+      { "t": "fold", "seat": 4 },
+      { "t": "fold", "seat": 5 },
+      { "t": "fold", "seat": 0 },
+      { "t": "fold", "seat": 1 },
+      { "t": "fold", "seat": 2 }
+    ]
+  },
+  "expect": {
+    "finalPots": [{ "amount": "25", "eligible": [3] }],
+    "potAfterStreet": { "preflop": "25" },
+    "stacksAtEnd": {
+      "0": "1000",
+      "1": "995",
+      "2": "990",
+      "3": "990",
+      "4": "1000",
+      "5": "1000"
+    },
+    "netBySeat": {
+      "0": "0",
+      "1": "-5",
+      "2": "-10",
+      "3": "15",
+      "4": "0",
+      "5": "0"
+    },
+    "winners": [{ "seat": 3, "amount": "25" }],
+    "actingSeatAtStep": { "2": 3 }
+  }
+}

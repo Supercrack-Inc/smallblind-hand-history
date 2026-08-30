@@ -1,0 +1,51 @@
+{
+  "name": "decimal-stakes-split",
+  "description": "Blinds are whole numbers but the flop is bet in 2.2 increments, so the smallest chip has to come from the action amounts: the 8.4 pot splits 4.2 / 4.2, not 4 / 4.4.",
+  "hand": {
+    "v": 1,
+    "id": "8",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "USD",
+    "blinds": { "sb": "1", "bb": "2" },
+    "seats": 2,
+    "button": 0,
+    "players": [
+      { "seat": 0, "name": "Button", "stack": "100", "cards": "2c3d", "hero": true },
+      { "seat": 1, "name": "BigBlind", "stack": "100", "cards": "2h3s" }
+    ],
+    "board": "AsKsQdJhTh",
+    "actions": [
+      { "t": "post", "seat": 0, "kind": "sb", "amount": "1" },
+      { "t": "post", "seat": 1, "kind": "bb", "amount": "2" },
+      { "t": "call", "seat": 0, "amount": "2" },
+      { "t": "check", "seat": 1 },
+      { "t": "street", "street": "flop", "cards": "AsKsQd" },
+      { "t": "check", "seat": 1 },
+      { "t": "bet", "seat": 0, "to": "2.2" },
+      { "t": "call", "seat": 1, "amount": "2.2" },
+      { "t": "street", "street": "turn", "cards": "Jh" },
+      { "t": "check", "seat": 1 },
+      { "t": "check", "seat": 0 },
+      { "t": "street", "street": "river", "cards": "Th" },
+      { "t": "check", "seat": 1 },
+      { "t": "check", "seat": 0 }
+    ]
+  },
+  "expect": {
+    "finalPots": [{ "amount": "8.4", "eligible": [0, 1] }],
+    "potAfterStreet": {
+      "preflop": "4",
+      "flop": "8.4",
+      "turn": "8.4",
+      "river": "8.4"
+    },
+    "stacksAtEnd": { "0": "95.8", "1": "95.8" },
+    "netBySeat": { "0": "0", "1": "0" },
+    "winners": [
+      { "seat": 0, "amount": "4.2", "handName": "Straight" },
+      { "seat": 1, "amount": "4.2", "handName": "Straight" }
+    ],
+    "actingSeatAtStep": { "2": 0, "3": 1 }
+  }
+}

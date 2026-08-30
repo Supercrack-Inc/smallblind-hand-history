@@ -1,0 +1,86 @@
+{
+  "name": "pokerbase-aa-vs-55",
+  "description": "Real hand observed on Pokerbase (5,000/10,000 NLHE 9-max, BB ante). Hero AdAc at UTG+1 loses to a set of fives. Pots and stacks below were read off the Pokerbase replayer and must match exactly.",
+  "hand": {
+    "v": 1,
+    "id": "1",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "",
+    "blinds": { "sb": "5000", "bb": "10000", "ante": "10000", "anteType": "bb" },
+    "seats": 9,
+    "button": 5,
+    "players": [
+      { "seat": 0, "name": "Hero", "stack": "1200000", "cards": "AdAc", "hero": true },
+      { "seat": 1, "stack": "1200000" },
+      { "seat": 2, "stack": "1200000" },
+      { "seat": 3, "stack": "1200000" },
+      { "seat": 4, "stack": "1200000" },
+      { "seat": 5, "stack": "1200000" },
+      { "seat": 6, "stack": "1200000" },
+      { "seat": 7, "stack": "1200000" },
+      { "seat": 8, "name": "Villain", "stack": "1200000", "cards": "5c5s" }
+    ],
+    "board": "8d4d3h5hTd",
+    "actions": [
+      { "t": "post", "seat": 7, "kind": "ante", "amount": "10000" },
+      { "t": "post", "seat": 6, "kind": "sb", "amount": "5000" },
+      { "t": "post", "seat": 7, "kind": "bb", "amount": "10000" },
+      { "t": "raise", "seat": 8, "to": "22000" },
+      { "t": "raise", "seat": 0, "to": "65000" },
+      { "t": "fold", "seat": 1 },
+      { "t": "fold", "seat": 2 },
+      { "t": "fold", "seat": 3 },
+      { "t": "fold", "seat": 4 },
+      { "t": "fold", "seat": 5 },
+      { "t": "fold", "seat": 6 },
+      { "t": "fold", "seat": 7 },
+      { "t": "call", "seat": 8, "amount": "65000" },
+      { "t": "street", "street": "flop", "cards": "8d4d3h" },
+      { "t": "check", "seat": 8 },
+      { "t": "bet", "seat": 0, "to": "50000" },
+      { "t": "call", "seat": 8, "amount": "50000" },
+      { "t": "street", "street": "turn", "cards": "5h" },
+      { "t": "bet", "seat": 8, "to": "110000" },
+      { "t": "call", "seat": 0, "amount": "110000" },
+      { "t": "street", "street": "river", "cards": "Td" },
+      { "t": "bet", "seat": 8, "to": "375000" },
+      { "t": "call", "seat": 0, "amount": "375000" }
+    ]
+  },
+  "expect": {
+    "finalPots": [{ "amount": "1225000", "eligible": [0, 8] }],
+    "potAfterStreet": {
+      "preflop": "155000",
+      "flop": "255000",
+      "turn": "475000",
+      "river": "1225000"
+    },
+    "stacksAtEnd": {
+      "0": "600000",
+      "1": "1200000",
+      "2": "1200000",
+      "3": "1200000",
+      "4": "1200000",
+      "5": "1200000",
+      "6": "1195000",
+      "7": "1180000",
+      "8": "600000"
+    },
+    "netBySeat": {
+      "0": "-600000",
+      "1": "0",
+      "2": "0",
+      "3": "0",
+      "4": "0",
+      "5": "0",
+      "6": "-5000",
+      "7": "-20000",
+      "8": "625000"
+    },
+    "winners": [
+      { "seat": 8, "amount": "1225000", "handName": "Three of a Kind" }
+    ],
+    "actingSeatAtStep": { "3": 8, "14": 8 }
+  }
+}

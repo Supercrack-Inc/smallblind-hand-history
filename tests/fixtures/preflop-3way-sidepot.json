@@ -1,0 +1,47 @@
+{
+  "name": "preflop-3way-sidepot",
+  "description": "Three unequal stacks all-in preflop. QQ (short) takes the main pot, 77 takes the side pot, and the button's uncalled 100 comes back.",
+  "hand": {
+    "v": 1,
+    "id": "2",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "USD",
+    "blinds": { "sb": "5", "bb": "10" },
+    "seats": 3,
+    "button": 0,
+    "players": [
+      { "seat": 0, "name": "Big", "stack": "300", "cards": "AhKh", "hero": true },
+      { "seat": 1, "name": "Short", "stack": "100", "cards": "QsQd" },
+      { "seat": 2, "name": "Mid", "stack": "200", "cards": "7c7d" }
+    ],
+    "board": "2c5d9sJh3h",
+    "actions": [
+      { "t": "post", "seat": 1, "kind": "sb", "amount": "5" },
+      { "t": "post", "seat": 2, "kind": "bb", "amount": "10" },
+      { "t": "allin", "seat": 0, "to": "300" },
+      { "t": "allin", "seat": 1, "to": "100" },
+      { "t": "allin", "seat": 2, "to": "200" },
+      { "t": "street", "street": "flop", "cards": "2c5d9s" },
+      { "t": "street", "street": "turn", "cards": "Jh" },
+      { "t": "street", "street": "river", "cards": "3h" }
+    ]
+  },
+  "expect": {
+    "finalPots": [
+      { "amount": "300", "eligible": [0, 1, 2] },
+      { "amount": "200", "eligible": [0, 2] }
+    ],
+    "potAfterStreet": {
+      "preflop": "500",
+      "river": "500"
+    },
+    "stacksAtEnd": { "0": "100", "1": "0", "2": "0" },
+    "netBySeat": { "0": "-200", "1": "200", "2": "0" },
+    "winners": [
+      { "seat": 1, "amount": "300", "handName": "Pair" },
+      { "seat": 2, "amount": "200", "handName": "Pair" }
+    ],
+    "actingSeatAtStep": { "2": 0, "5": null }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "heads-up-button-first",
+  "description": "Heads-up order: the button posts the small blind and acts first preflop, the big blind acts first on the flop. Ends in a fold, so the uncalled 100 is returned.",
+  "hand": {
+    "v": 1,
+    "id": "3",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "USD",
+    "blinds": { "sb": "5", "bb": "10" },
+    "seats": 2,
+    "button": 0,
+    "players": [
+      { "seat": 0, "name": "Button", "stack": "1000", "cards": "AhAd", "hero": true },
+      { "seat": 1, "name": "BigBlind", "stack": "1000", "cards": "KsKd" }
+    ],
+    "actions": [
+      { "t": "post", "seat": 0, "kind": "sb", "amount": "5" },
+      { "t": "post", "seat": 1, "kind": "bb", "amount": "10" },
+      { "t": "raise", "seat": 0, "to": "30" },
+      { "t": "raise", "seat": 1, "to": "90" },
+      { "t": "call", "seat": 0, "amount": "90" },
+      { "t": "street", "street": "flop", "cards": "2c7d9h" },
+      { "t": "check", "seat": 1 },
+      { "t": "bet", "seat": 0, "to": "100" },
+      { "t": "fold", "seat": 1 }
+    ]
+  },
+  "expect": {
+    "finalPots": [{ "amount": "180", "eligible": [0] }],
+    "potAfterStreet": { "preflop": "180", "flop": "180" },
+    "stacksAtEnd": { "0": "910", "1": "910" },
+    "netBySeat": { "0": "90", "1": "-90" },
+    "winners": [{ "seat": 0, "amount": "180" }],
+    "actingSeatAtStep": { "2": 0, "6": 1 }
+  }
+}

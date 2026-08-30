@@ -1,0 +1,65 @@
+{
+  "name": "straddle-each-ante",
+  "description": "Every player antes 2 and UTG straddles to 20, so preflop action starts left of the straddle and the minimum raise is 40. The straddler folds the flop.",
+  "hand": {
+    "v": 1,
+    "id": "6",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "USD",
+    "blinds": { "sb": "5", "bb": "10", "ante": "2", "anteType": "each" },
+    "seats": 6,
+    "button": 0,
+    "players": [
+      { "seat": 0, "name": "Button", "stack": "1000", "cards": "AhKh", "hero": true },
+      { "seat": 1, "stack": "1000" },
+      { "seat": 2, "stack": "1000" },
+      { "seat": 3, "name": "Straddle", "stack": "1000" },
+      { "seat": 4, "stack": "1000" },
+      { "seat": 5, "stack": "1000" }
+    ],
+    "actions": [
+      { "t": "post", "seat": 0, "kind": "ante", "amount": "2" },
+      { "t": "post", "seat": 1, "kind": "ante", "amount": "2" },
+      { "t": "post", "seat": 2, "kind": "ante", "amount": "2" },
+      { "t": "post", "seat": 3, "kind": "ante", "amount": "2" },
+      { "t": "post", "seat": 4, "kind": "ante", "amount": "2" },
+      { "t": "post", "seat": 5, "kind": "ante", "amount": "2" },
+      { "t": "post", "seat": 1, "kind": "sb", "amount": "5" },
+      { "t": "post", "seat": 2, "kind": "bb", "amount": "10" },
+      { "t": "post", "seat": 3, "kind": "straddle", "amount": "20" },
+      { "t": "fold", "seat": 4 },
+      { "t": "fold", "seat": 5 },
+      { "t": "raise", "seat": 0, "to": "50" },
+      { "t": "fold", "seat": 1 },
+      { "t": "fold", "seat": 2 },
+      { "t": "call", "seat": 3, "amount": "50" },
+      { "t": "street", "street": "flop", "cards": "8s5c2d" },
+      { "t": "check", "seat": 3 },
+      { "t": "bet", "seat": 0, "to": "60" },
+      { "t": "fold", "seat": 3 }
+    ]
+  },
+  "expect": {
+    "finalPots": [{ "amount": "127", "eligible": [0] }],
+    "potAfterStreet": { "preflop": "127", "flop": "127" },
+    "stacksAtEnd": {
+      "0": "948",
+      "1": "993",
+      "2": "988",
+      "3": "948",
+      "4": "998",
+      "5": "998"
+    },
+    "netBySeat": {
+      "0": "75",
+      "1": "-7",
+      "2": "-12",
+      "3": "-52",
+      "4": "-2",
+      "5": "-2"
+    },
+    "winners": [{ "seat": 0, "amount": "127" }],
+    "actingSeatAtStep": { "9": 4, "16": 3 }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "name": "@smallblind/hand-history",
+  "version": "1.0.0",
+  "description": "Poker hand history engine: domain model, replay, validation, text and URL serialization, plus a card and hand evaluator core.",
+  "license": "MIT",
+  "author": "Supercrack Inc.",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./cards": {
+      "import": {
+        "types": "./dist/cards.d.ts",
+        "default": "./dist/cards.js"
+      },
+      "require": {
+        "types": "./dist/cards.d.cts",
+        "default": "./dist/cards.cjs"
+      }
+    },
+    "./evaluator": {
+      "import": {
+        "types": "./dist/hand-evaluator.d.ts",
+        "default": "./dist/hand-evaluator.js"
+      },
+      "require": {
+        "types": "./dist/hand-evaluator.d.cts",
+        "default": "./dist/hand-evaluator.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Supercrack-Inc/smallblind-hand-history.git"
+  },
+  "homepage": "https://github.com/Supercrack-Inc/smallblind-hand-history",
+  "bugs": {
+    "url": "https://github.com/Supercrack-Inc/smallblind-hand-history/issues"
+  },
+  "keywords": [
+    "poker",
+    "hand-history",
+    "nlhe",
+    "replay",
+    "hand-evaluator"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "pack:check": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "big.js": "^7.0.1",
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/big.js": "^7.0.0",
+    "@types/node": "^26.4.0",
+    "eslint": "^10.9.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
+  }
+}

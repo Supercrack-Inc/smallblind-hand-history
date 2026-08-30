@@ -1,0 +1,40 @@
+{
+  "name": "short-bb-allin",
+  "description": "The big blind is all-in for 0.5 of a 2 blind. The table still plays for the full 2, so the button calls 2 — and the extra beyond what the blind could match comes back as a side pot only the button can win.",
+  "hand": {
+    "v": 1,
+    "id": "9",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "USD",
+    "blinds": { "sb": "1", "bb": "2" },
+    "seats": 3,
+    "button": 0,
+    "players": [
+      { "seat": 0, "name": "Button", "stack": "100", "cards": "AhKh", "hero": true },
+      { "seat": 1, "name": "SmallBlind", "stack": "100" },
+      { "seat": 2, "name": "ShortBlind", "stack": "0.5", "cards": "2c2d" }
+    ],
+    "board": "Ad7d3h9c4s",
+    "actions": [
+      { "t": "post", "seat": 1, "kind": "sb", "amount": "1" },
+      { "t": "post", "seat": 2, "kind": "bb", "amount": "0.5" },
+      { "t": "call", "seat": 0, "amount": "2" },
+      { "t": "fold", "seat": 1 },
+      { "t": "street", "street": "flop", "cards": "Ad7d3h" },
+      { "t": "street", "street": "turn", "cards": "9c" },
+      { "t": "street", "street": "river", "cards": "4s" }
+    ]
+  },
+  "expect": {
+    "finalPots": [
+      { "amount": "1.5", "eligible": [0, 2] },
+      { "amount": "1", "eligible": [0] }
+    ],
+    "potAfterStreet": { "preflop": "2.5", "river": "2.5" },
+    "stacksAtEnd": { "0": "99", "1": "99", "2": "0" },
+    "netBySeat": { "0": "1.5", "1": "-1", "2": "-0.5" },
+    "winners": [{ "seat": 0, "amount": "2.5", "handName": "Pair" }],
+    "actingSeatAtStep": { "2": 0, "4": null }
+  }
+}
