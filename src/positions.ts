@@ -140,10 +140,109 @@ function applyExclude(order: readonly number[], options?: OrderOptions) {
   return order.filter((seat) => !exclude.has(seat))
 }
 
+type StraddleResolution = {
+  /** Seat the preflop action runs up to. */
+  anchor: number
+  /** True once a button straddle has closed straddling for the hand. */
+  closed: boolean
+}
+
+function resolveStraddles(
+  seats: number,
+  button: number,
+  occupiedSeats: readonly number[],
+  straddles: readonly number[],
+): StraddleResolution {
+  const order = seatOrderFromButton(seats, button, occupiedSeats)
+  const { bb } = blindSeats(seats, button, occupiedSeats)
+  const leftOf = (seat: number) =>
+    order[(order.indexOf(seat) + 1) % order.length]!
+
+  let anchor = bb
+  let closed = false
+
+  straddles.forEach((seat) => {
+    if (closed) {
+      throw new Error(
+        `Seat ${seat} cannot straddle behind the button straddle at seat ${anchor}`,
+      )
+    }
+
+    if (seat === leftOf(anchor)) {
+      // The ordinary chain: each straddle sits left of the one before it.
+      anchor = seat
+      return
+    }
+
+    if (anchor === bb && seat === button) {
+      // A Mississippi straddle from the button, posted on its own.
+      anchor = seat
+      closed = true
+      return
+    }
+
+    const alternative =
+      anchor === bb && button !== leftOf(anchor)
+        ? ` or from the button (seat ${button})`
+        : ''
+
+    throw new Error(
+      `Straddle at seat ${seat} must be posted from seat ${leftOf(anchor)}${alternative}`,
+    )
+  })
+
+  return { anchor, closed }
+}
+
+/**
+ * Seat the preflop action runs up to — the big blind, or the last straddle.
+ * Throws when the straddles are not a legal chain or button straddle.
+ */
+export function straddleAnchorSeat(
+  seats: number,
+  button: number,
+  occupiedSeats: readonly number[],
+  straddles: readonly number[] = [],
+): number {
+  return resolveStraddles(seats, button, occupiedSeats, straddles).anchor
+}
+
+/**
+ * Seats that may post the next straddle: the seat left of the current anchor,
+ * plus the button while no straddle has been posted yet (a Mississippi
+ * straddle). Empty once a button straddle has closed straddling, or when the
+ * straddles posted so far are not legal in the first place.
+ */
+export function nextStraddleSeats(
+  seats: number,
+  button: number,
+  occupiedSeats: readonly number[],
+  straddles: readonly number[] = [],
+): number[] {
+  let resolution: StraddleResolution
+
+  try {
+    resolution = resolveStraddles(seats, button, occupiedSeats, straddles)
+  } catch {
+    return []
+  }
+
+  if (resolution.closed) {
+    return []
+  }
+
+  const order = seatOrderFromButton(seats, button, occupiedSeats)
+  const chain =
+    order[(order.indexOf(resolution.anchor) + 1) % order.length]!
+
+  return straddles.length === 0 && button !== chain ? [chain, button] : [chain]
+}
+
 /**
  * Preflop action order: starts left of the big blind, or left of the last
- * straddle when straddles are in play. Heads-up the button (small blind) is
- * first to act.
+ * straddle when straddles are in play — including a button straddle, which
+ * puts the small blind in first and leaves the button to act last. Heads-up
+ * the button (small blind) is first to act.
  */
 export function preflopOrder(
   seats: number,
@@ -152,28 +251,10 @@ export function preflopOrder(
   options?: PreflopOrderOptions,
 ): number[] {
   const order = seatOrderFromButton(seats, button, occupiedSeats)
-  const { bb } = blindSeats(seats, button, occupiedSeats)
   const straddles = (options?.straddles ?? []).filter((seat) =>
     order.includes(seat),
   )
-
-  // Straddles form a chain in posting order: the first sits left of the big
-  // blind, each later one left of the previous, and the last of them acts last
-  // preflop. That is not the same as the seat furthest from the button, since
-  // the chain may wrap past it.
-  let anchor = bb
-
-  straddles.forEach((seat) => {
-    const expected = order[(order.indexOf(anchor) + 1) % order.length]!
-
-    if (seat !== expected) {
-      throw new Error(
-        `Straddle at seat ${seat} must be posted from seat ${expected}, left of seat ${anchor}`,
-      )
-    }
-
-    anchor = seat
-  })
+  const anchor = straddleAnchorSeat(seats, button, occupiedSeats, straddles)
 
   return applyExclude(rotateAfter(order, anchor), options)
 }

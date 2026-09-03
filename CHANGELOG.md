@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-03
+
+### Added
+
+- Button (Mississippi) straddles: the button may post a `straddle` on its own,
+  which moves the preflop action to start with the small blind and leaves the
+  button to act last. Chain straddles are unchanged, and the two cannot be
+  mixed — a button straddle closes straddling for the hand.
+- `availableStraddleSeats(state, hand)` for recorders that offer the button as
+  a straddle spot, plus `straddleAnchorSeat` and `nextStraddleSeats` in the
+  positions module.
+- Contract fixture `tests/fixtures/button-straddle.json`.
+
+### Notes
+
+- `HandRecord` v1 is unchanged: a button straddle is an ordinary
+  `post`/`straddle` action from the button seat. Records written with one are
+  rejected by 1.0.x, so consumers that read them should depend on `^1.1`.
+
 ## [1.0.0] - 2026-08-31
 
 First release. Format `HandRecord` v1 is frozen for the 1.x line.

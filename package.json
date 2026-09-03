@@ -1,6 +1,6 @@
 {
   "name": "@smallblind/hand-history",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Poker hand history engine: domain model, replay, validation, text and URL serialization, plus a card and hand evaluator core.",
   "license": "MIT",
   "author": "Supercrack Inc.",

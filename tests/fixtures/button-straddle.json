@@ -1,0 +1,73 @@
+{
+  "name": "button-straddle",
+  "description": "Mississippi straddle: the button straddles to 20 in a 5/10 game, so preflop action starts left of the straddler — the small blind acts first and the button acts last. Postflop order is unchanged.",
+  "hand": {
+    "v": 1,
+    "id": "10",
+    "playedAt": 1787961600000,
+    "game": "NLHE",
+    "currency": "USD",
+    "blinds": { "sb": "5", "bb": "10" },
+    "seats": 6,
+    "button": 0,
+    "players": [
+      { "seat": 0, "name": "Button", "stack": "1000", "cards": "AhAd", "hero": true },
+      { "seat": 1, "name": "SmallBlind", "stack": "1000" },
+      { "seat": 2, "name": "BigBlind", "stack": "1000" },
+      { "seat": 3, "name": "UTG", "stack": "1000", "cards": "KsKd" },
+      { "seat": 4, "stack": "1000" },
+      { "seat": 5, "stack": "1000" }
+    ],
+    "board": "Ac7d2hJs4c",
+    "actions": [
+      { "t": "post", "seat": 1, "kind": "sb", "amount": "5" },
+      { "t": "post", "seat": 2, "kind": "bb", "amount": "10" },
+      { "t": "post", "seat": 0, "kind": "straddle", "amount": "20" },
+      { "t": "fold", "seat": 1 },
+      { "t": "fold", "seat": 2 },
+      { "t": "raise", "seat": 3, "to": "60" },
+      { "t": "fold", "seat": 4 },
+      { "t": "fold", "seat": 5 },
+      { "t": "call", "seat": 0, "amount": "60" },
+      { "t": "street", "street": "flop", "cards": "Ac7d2h" },
+      { "t": "check", "seat": 3 },
+      { "t": "bet", "seat": 0, "to": "100" },
+      { "t": "call", "seat": 3, "amount": "100" },
+      { "t": "street", "street": "turn", "cards": "Js" },
+      { "t": "check", "seat": 3 },
+      { "t": "check", "seat": 0 },
+      { "t": "street", "street": "river", "cards": "4c" },
+      { "t": "bet", "seat": 3, "to": "200" },
+      { "t": "call", "seat": 0, "amount": "200" }
+    ]
+  },
+  "expect": {
+    "finalPots": [{ "amount": "735", "eligible": [0, 3] }],
+    "potAfterStreet": {
+      "preflop": "135",
+      "flop": "335",
+      "turn": "335",
+      "river": "735"
+    },
+    "stacksAtEnd": {
+      "0": "640",
+      "1": "995",
+      "2": "990",
+      "3": "640",
+      "4": "1000",
+      "5": "1000"
+    },
+    "netBySeat": {
+      "0": "375",
+      "1": "-5",
+      "2": "-10",
+      "3": "-360",
+      "4": "0",
+      "5": "0"
+    },
+    "winners": [
+      { "seat": 0, "amount": "735", "handName": "Three of a Kind" }
+    ],
+    "actingSeatAtStep": { "3": 1, "10": 3 }
+  }
+}

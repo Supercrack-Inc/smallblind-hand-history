@@ -21,6 +21,7 @@ import {
 } from '../src/replay'
 import type { HandAction, HandRecord } from '../src/types'
 import {
+  availableStraddleSeats,
   legalActions,
   validateAction,
   validateRecord,
@@ -28,6 +29,7 @@ import {
 } from '../src/validate'
 
 const FIXTURE_NAMES = [
+  'button-straddle',
   'pokerbase-aa-vs-55',
   'preflop-3way-sidepot',
   'heads-up-button-first',
@@ -1636,5 +1638,177 @@ describe('R7-1 · validateAction and applyAction agree', () => {
         HandReplayError,
       )
     })
+  })
+})
+
+describe('button straddle · a Mississippi straddle moves the action', () => {
+  const sixMax = (overrides: Partial<HandRecord> = {}): HandRecord =>
+    threeHanded({
+      seats: 6,
+      button: 0,
+      players: [
+        { seat: 0, stack: '1000', hero: true },
+        { seat: 1, stack: '1000' },
+        { seat: 2, stack: '1000' },
+        { seat: 3, stack: '1000' },
+        { seat: 4, stack: '1000' },
+        { seat: 5, stack: '1000' },
+      ],
+      ...overrides,
+    })
+  const blinds: HandAction[] = [
+    { t: 'post', seat: 1, kind: 'sb', amount: '5' },
+    { t: 'post', seat: 2, kind: 'bb', amount: '10' },
+  ]
+  const buttonStraddle: HandAction = {
+    t: 'post',
+    seat: 0,
+    kind: 'straddle',
+    amount: '20',
+  }
+
+  it('starts the preflop left of the straddler', () => {
+    // Action begins with the seat left of whoever straddled, so a button
+    // straddle puts the small blind in first and the button in last.
+    expect(preflopOrder(6, 0, [0, 1, 2, 3, 4, 5], { straddles: [0] })).toEqual([
+      1, 2, 3, 4, 5, 0,
+    ])
+    // Without one it still starts left of the big blind.
+    expect(preflopOrder(6, 0, [0, 1, 2, 3, 4, 5])).toEqual([3, 4, 5, 0, 1, 2])
+  })
+
+  it('is the same seat as the chain straddle three-handed', () => {
+    // Three-handed the seat left of the big blind *is* the button, so the two
+    // kinds of straddle coincide and nothing special happens.
+    expect(preflopOrder(3, 0, [0, 1, 2], { straddles: [0] })).toEqual([1, 2, 0])
+    expect(preflopOrder(2, 0, [0, 1], { straddles: [0] })).toEqual([1, 0])
+  })
+
+  it('takes the straddle from the button and runs the hand from there', () => {
+    const table = sixMax()
+    const state = walk(table, [...blinds, buttonStraddle])
+
+    expect(validateAction(walk(table, blinds), buttonStraddle, table)).toBeNull()
+    expect(state.actingSeat).toBe(1)
+    expect(state.betting.bringIn).toBe('20')
+    expect(state.betting.lastRaiseSize).toBe('20')
+    expect(legalActions(state, table)?.minRaiseTo).toBe('40')
+  })
+
+  it('offers the button alongside the chain seat, and closes after it', () => {
+    const table = sixMax()
+    const posted = walk(table, blinds)
+
+    // Under the gun continues the chain; the button may jump it.
+    expect(availableStraddleSeats(posted, table)).toEqual([3, 0])
+    expect(
+      availableStraddleSeats(walk(table, [...blinds, buttonStraddle]), table),
+    ).toEqual([])
+    expect(
+      availableStraddleSeats(
+        walk(table, [
+          ...blinds,
+          { t: 'post', seat: 3, kind: 'straddle', amount: '20' },
+        ]),
+        table,
+      ),
+    ).toEqual([4])
+    // Nothing to offer before the blinds are in, or once someone has acted.
+    expect(availableStraddleSeats(initialState(table), table)).toEqual([])
+    expect(
+      availableStraddleSeats(
+        walk(table, [...blinds, { t: 'fold', seat: 3 }]),
+        table,
+      ),
+    ).toEqual([])
+  })
+
+  it('refuses a straddle from a seat that is neither the chain nor the button', () => {
+    const table = sixMax()
+    const posted = walk(table, blinds)
+
+    expect(
+      validateAction(
+        posted,
+        { t: 'post', seat: 4, kind: 'straddle', amount: '20' },
+        table,
+      ),
+    ).toMatchObject({ code: 'illegal-action', seat: 4 })
+  })
+
+  it('closes straddling once the button has straddled', () => {
+    const table = sixMax()
+    const state = walk(table, [...blinds, buttonStraddle])
+
+    expect(
+      validateAction(
+        state,
+        { t: 'post', seat: 1, kind: 'straddle', amount: '40' },
+        table,
+      ),
+    ).toMatchObject({ code: 'illegal-action' })
+    expect(
+      validateRecord(
+        sixMax({
+          actions: [
+            ...blinds,
+            buttonStraddle,
+            { t: 'post', seat: 3, kind: 'straddle', amount: '40' },
+            { t: 'fold', seat: 1 },
+          ],
+        }),
+      ).map((problem) => problem.code),
+    ).toContain('illegal-action')
+  })
+
+  it('refuses a button straddle behind an existing chain', () => {
+    const table = sixMax()
+    const state = walk(table, [
+      ...blinds,
+      { t: 'post', seat: 3, kind: 'straddle', amount: '20' },
+    ])
+
+    // Seat 4 continues the chain; the button no longer has a claim.
+    expect(
+      validateAction(state, { t: 'post', seat: 0, kind: 'straddle', amount: '40' }, table),
+    ).toMatchObject({ code: 'illegal-action', seat: 0 })
+  })
+
+  it('handles a short all-in button straddle like any other', () => {
+    const table = sixMax({
+      players: [
+        { seat: 0, stack: '15', hero: true },
+        { seat: 1, stack: '1000' },
+        { seat: 2, stack: '1000' },
+        { seat: 3, stack: '1000' },
+        { seat: 4, stack: '1000' },
+        { seat: 5, stack: '1000' },
+      ],
+    })
+    const state = walk(table, [
+      ...blinds,
+      { t: 'post', seat: 0, kind: 'straddle', amount: '15' },
+    ])
+
+    expect(state.betting.bringIn).toBe('15')
+    expect(state.betting.lastRaiseSize).toBe('10')
+    expect(state.actingSeat).toBe(1)
+
+    const legal = legalActions(state, table)
+
+    expect(legal?.callAmount).toBe('10')
+    expect(legal?.minRaiseTo).toBe('25')
+  })
+
+  it('rebuilds the same state after an undo', () => {
+    const hand = loadFixture('button-straddle')
+    const bare: HandRecord = { ...hand, actions: [] }
+    const applied = hand.actions.slice(0, -1)
+    const undone = applied.reduce(
+      (state, action) => applyAction(state, action, bare),
+      initialState(bare),
+    )
+
+    expect(undone).toEqual(replay(hand, applied.length))
   })
 })

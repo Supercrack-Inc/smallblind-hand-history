@@ -11,7 +11,7 @@
 import Big from 'big.js'
 
 import { chipUnitForCurrency, isSupportedCurrency } from './currency'
-import { blindSeats, seatOrderFromButton } from './positions'
+import { blindSeats, nextStraddleSeats } from './positions'
 import {
   applyAction,
   currentBet,
@@ -762,7 +762,6 @@ export function validateAction(
       }
 
       const seated = seatedSeats(hand)
-      const order = seatOrderFromButton(hand.seats, hand.button, seated)
       const { sb, bb } = blindSeats(hand.seats, hand.button, seated)
       // Straight from the state: a recorder appends the action after applying
       // it, so the record is always one behind here.
@@ -860,14 +859,21 @@ export function validateAction(
         }
 
         const straddles = posted.filter((entry) => entry.kind === 'straddle')
-        const previous = straddles[straddles.length - 1]
-        const anchor = previous ? previous.seat : bb
-        const expected = order[(order.indexOf(anchor) + 1) % order.length]!
+        const allowed = nextStraddleSeats(
+          hand.seats,
+          hand.button,
+          seated,
+          straddles.map((entry) => entry.seat),
+        )
 
-        if (action.seat !== expected) {
+        if (!allowed.includes(action.seat)) {
           return error(
             'illegal-action',
-            `A straddle is posted from seat ${expected}, left of seat ${anchor}`,
+            allowed.length === 0
+              ? 'The button straddle closed straddling for this hand'
+              : `A straddle here is posted from ${allowed
+                  .map((seat) => `seat ${seat}`)
+                  .join(' or ')}`,
             { step: state.step, seat: action.seat },
           )
         }
@@ -988,6 +994,43 @@ export function validateAction(
     default:
       return validateBettingAction(state, action, hand)
   }
+}
+
+/**
+ * Seats that may post a straddle right now, for a recorder that offers the
+ * button. Empty unless the hand is still taking forced bets: preflop, before
+ * anyone has acted voluntarily, and with the blinds and antes already in.
+ *
+ * Normally that is the seat left of the last straddle (or of the big blind),
+ * plus the **button** while no straddle has been posted — the Mississippi
+ * straddle. A button straddle closes straddling for the hand.
+ */
+export function availableStraddleSeats(
+  state: TableState,
+  hand: HandRecord,
+): number[] {
+  if (
+    state.isComplete ||
+    state.street !== 'preflop' ||
+    state.betting.actedSeats.length > 0
+  ) {
+    return []
+  }
+
+  if (missingForcedBets(hand, state.betting.posts, state.stacks).length > 0) {
+    return []
+  }
+
+  const straddles = state.betting.posts
+    .filter((post) => post.kind === 'straddle')
+    .map((post) => post.seat)
+
+  return nextStraddleSeats(
+    hand.seats,
+    hand.button,
+    seatedSeats(hand),
+    straddles,
+  ).filter((seat) => big(state.stacks[seat]).gt(ZERO))
 }
 
 /**

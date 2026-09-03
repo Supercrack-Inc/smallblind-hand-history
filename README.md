@@ -40,9 +40,9 @@ Three entry points. The package root re-exports everything; `/cards` and
 | `cards` | `Card`, `CardRank`, `CardSuit`, `CARD_RANKS`, `CARD_SUITS`, `CARD_RANK_VALUES`, `CARD_SUIT_SYMBOLS`, `parseCard`, `cardKey`, `cardLabel`, `cardToNativeId`, `cardFromNativeId`, `createDeck`, `deckWithout`, `uniqueCards`, `assertUniqueCards`, `seedFromText`, `createSeededRandom` |
 | `evaluator` | `HandCategory`, `HandScore`, `evaluateFiveCardHand`, `evaluateBestHand`, `compareHandScores`, `rankValue` |
 | Currency | `chipUnitForCurrency`, `isSupportedCurrency`, `CURRENCY_MINOR_UNITS` |
-| Positions | `PositionLabel`, `OrderOptions`, `PreflopOrderOptions`, `positionLabels`, `blindSeats`, `seatOrderFromButton`, `preflopOrder`, `postflopOrder` |
+| Positions | `PositionLabel`, `OrderOptions`, `PreflopOrderOptions`, `positionLabels`, `blindSeats`, `seatOrderFromButton`, `preflopOrder`, `postflopOrder`, `straddleAnchorSeat`, `nextStraddleSeats` |
 | Replay | `initialState`, `applyAction`, `replay`, `replayAll`, `stepCount`, `currentBet`, `totalPot`, `finalStacks`, `parseCards`, `seatedSeats`, `straddleSeats`, `HandReplayError`, `HAND_CATEGORY_NAMES` |
-| Validation | `validateRecordStatic`, `validateRecord`, `validateAction`, `legalActions`, `ValidationError`, `ValidationErrorCode` |
+| Validation | `validateRecordStatic`, `validateRecord`, `validateAction`, `legalActions`, `availableStraddleSeats`, `ValidationError`, `ValidationErrorCode` |
 | Text | `formatHandText`, `formatAmount`, `formatCards`, `TextLabels`, `FormatHandTextOptions`, `EN_LABELS`, `KO_LABELS`, `TEXT_LABELS` |
 | URL codec | `encodeHand`, `decodeHand`, `buildHandUrl`, `parseHandUrl`, `minifyHand`, `expandHand`, `assertHandRecord`, `HandCodecError`, `HandCodecErrorCode`, `HAND_URL_MAX_LENGTH`, `HAND_PAYLOAD_MAX_LENGTH`, `HAND_INFLATED_MAX_BYTES`, `HAND_CODEC_KEY_MAP`, `HAND_CODEC_ACTION_TYPE_MAP` |
 
@@ -112,9 +112,14 @@ same way and answers exactly what `applyAction` will accept.
   raise is still measured from the blind, so the minimum is 25. One that cannot
   even reach the blind leaves the stakes where they were.
 - **Forced bets are posted in one order:** the ante a seat owes, then the small
-  blind, then the big blind, then the straddle chain. A straddle never jumps the
+  blind, then the big blind, then the straddles. A straddle never jumps the
   blinds — otherwise a short stack could empty itself on one and be excused from
   a blind it never posted.
+- **A straddle comes from the chain or from the button.** The ordinary straddle
+  sits immediately left of the big blind, and each further one immediately left
+  of the last. The button may also straddle on its own — a *Mississippi*
+  straddle — and doing so closes straddling for the hand. Any other seat is
+  rejected. See [Straddles](#straddles) for the action order each produces.
 - **Antes come off the stack first.** A seat that owes an ante posts it before
   its blind, and a stack the ante swallows whole owes nothing further — a big
   blind all-in for its ante is not a missing big blind. With `anteType: 'bb'`
@@ -123,6 +128,41 @@ same way and answers exactly what `applyAction` will accept.
   the settled pots as a flow problem, so a payout that no real split of the main
   and side pots could produce is rejected — per-seat ceilings alone would let
   two seats claim the same pot.
+
+### Straddles
+
+Preflop action begins with the seat **left of the last straddler**, which is
+what makes the two kinds of straddle differ:
+
+| Straddle | Action starts | Acts last |
+| --- | --- | --- |
+| None | Left of the big blind (UTG) | Big blind |
+| Chain (UTG, then left of it, …) | Left of the last straddle | Last straddler |
+| Button (Mississippi) | Small blind | Button |
+
+The Mississippi straddle is the one live rule worth spelling out: a straddle
+from the button moves the whole preflop round, so the small blind is first to
+act and the button — having the last raise — closes the action. That is the
+standard treatment; action begins with the player to the straddler's left and
+proceeds normally around the table, with no skipped or reordered seats.
+([PokerNews](https://www.pokernews.com/pokerterms/mississippi-straddle.htm),
+[CardPlayer](https://www.cardplayer.com/rules-of-poker/glossary/straddle-in-poker))
+
+Two decisions this package makes, since the live rules vary:
+
+- **Only the chain seat and the button may straddle.** Rooms that allow a
+  Mississippi straddle from any non-blind seat exist; supporting that would
+  leave the record ambiguous about where action starts when several seats
+  straddle, so it is out of scope.
+- **A button straddle and a chain cannot coexist.** The two rules point in
+  opposite directions — a chain wants action left of the last chain straddle,
+  a button straddle wants it on the small blind — and any tie-break would be
+  arbitrary. Once the button straddles, straddling is closed; once a chain has
+  started, the button can only join it as the next seat in the chain (three-
+  handed and heads-up, the chain seat *is* the button, so the two coincide).
+
+`availableStraddleSeats(state, hand)` gives a recorder exactly the seats it may
+offer right now, and is empty as soon as anyone acts voluntarily.
 
 ### Validating
 
