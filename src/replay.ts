@@ -153,6 +153,7 @@ type Draft = {
   committed: Record<number, string>
   pots: Pot[]
   folded: number[]
+  mucked: number[]
   allIn: number[]
   revealed: Record<number, string>
   betting: StreetBetting
@@ -173,6 +174,7 @@ function toDraft(state: TableState): Draft {
     committed: { ...state.committed },
     pots: state.pots.map((pot) => ({ ...pot, eligible: [...pot.eligible] })),
     folded: [...state.folded],
+    mucked: [...state.mucked],
     allIn: [...state.allIn],
     revealed: { ...state.revealed },
     betting: {
@@ -200,6 +202,7 @@ function toState(draft: Draft): TableState {
     committed: draft.committed,
     pots: draft.pots,
     folded: [...draft.folded].sort((a, b) => a - b),
+    mucked: [...draft.mucked],
     allIn: [...draft.allIn].sort((a, b) => a - b),
     revealed: draft.revealed,
     betting: draft.betting,
@@ -368,6 +371,14 @@ function computePots(draft: Draft, hand: HandRecord): Pot[] {
     merged[0]!.amount = money(big(merged[0]!.amount).plus(dead.amount))
   }
 
+  // Once a pot has a sole claimant it is won without requiring a reveal.
+  // Later discards cannot destroy it. Preserve discard order for side pots.
+  draft.mucked.forEach((seat) => {
+    merged.forEach((pot) => {
+      if (pot.eligible.length > 1)
+        pot.eligible = pot.eligible.filter((candidate) => candidate !== seat)
+    })
+  })
   return merged
 }
 
@@ -637,6 +648,11 @@ function awardShowdown(
   const awards = new Map<number, Big>()
 
   draft.pots.forEach((pot) => {
+    if (pot.eligible.length === 1) {
+      const seat = pot.eligible[0]!
+      awards.set(seat, (awards.get(seat) ?? ZERO).plus(pot.amount))
+      return
+    }
     const eligible = pot.eligible.filter((seat) => scores.has(seat))
 
     if (eligible.length === 0) {
@@ -726,7 +742,7 @@ function finalize(draft: Draft, hand: HandRecord) {
   const board = boardCards(draft)
   const holes = new Map<number, string>()
 
-  live.forEach((seat) => {
+  live.filter((seat) => !draft.mucked.includes(seat)).forEach((seat) => {
     const cards = knownCards(hand, draft, seat)
 
     if (cards && cards.length === 4) {
@@ -734,7 +750,9 @@ function finalize(draft: Draft, hand: HandRecord) {
     }
   })
 
-  if (board.length < 10 || holes.size < live.length) {
+  const contested = draft.pots.filter((pot) => pot.eligible.length > 1)
+  if (board.length < 10 || contested.some((pot) =>
+    pot.eligible.some((seat) => !holes.has(seat)))) {
     if (hand.winners && hand.winners.length > 0) {
       awardManualWinners(draft, hand)
       return
@@ -825,6 +843,7 @@ export function initialState(hand: HandRecord): TableState {
     committed,
     pots: [],
     folded: [],
+    mucked: [],
     allIn: [],
     revealed: {},
     betting: {
@@ -897,6 +916,7 @@ export function applyAction(
   if (
     action.t !== 'post' &&
     action.t !== 'show' &&
+    action.t !== 'muck' &&
     action.t !== 'street' &&
     draft.street === 'preflop' &&
     draft.betting.actedSeats.length === 0
@@ -1117,7 +1137,18 @@ export function applyAction(
       break
     }
 
+    case 'muck': {
+      if (hand.v !== 2 || draft.board.length !== 10 || draft.actingSeat !== null ||
+          draft.mucked.includes(action.seat) || draft.revealed[action.seat]) {
+        throw new HandReplayError('Muck requires an unrevealed live hand at a closed showdown in v2', step, action)
+      }
+      draft.mucked.push(action.seat)
+      break
+    }
+
     case 'show': {
+      if (draft.mucked.includes(action.seat))
+        throw new HandReplayError('A mucked hand cannot be shown', step, action)
       draft.revealed[action.seat] = action.cards
       break
     }

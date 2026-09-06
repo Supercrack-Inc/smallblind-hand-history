@@ -1,7 +1,7 @@
 /**
- * URL fragment codec for `HandRecord` v1.
+ * URL fragment codec for `HandRecord` v1/v2.
  *
- * A hand is serialized as `v1.<base64url(rawDeflate(utf8(JSON)))>` over a
+ * A hand is serialized as `v{version}.<base64url(rawDeflate(utf8(JSON)))>` over a
  * key-minified JSON shape, so a full 9-max hand fits comfortably inside a URL.
  *
  * The implementation is deliberately dependency-light and platform-agnostic:
@@ -15,9 +15,6 @@ import { deflateSync, inflateSync } from 'fflate'
 import type { Blinds, HandAction, HandPlayer, HandRecord } from './types'
 import { validateRecord } from './validate'
 import type { ValidationError } from './validate'
-
-/** Payload prefix identifying the format version this module reads and writes. */
-const VERSION_PREFIX = 'v1.'
 
 /** Matches any `v<digits>.` prefix, used to tell a wrong version from garbage. */
 const VERSION_PREFIX_PATTERN = /^v(\d+)\./
@@ -47,7 +44,7 @@ export const HAND_INFLATED_MAX_BYTES = 65_536
 export type HandCodecErrorCode =
   /** The payload carries a format version this build cannot read. */
   | 'UNSUPPORTED_VERSION'
-  /** The payload is not a decodable `v1.` envelope at all. */
+  /** The payload is not a decodable versioned envelope at all. */
   | 'MALFORMED'
   /** The payload breaches a size limit before or after decompression. */
   | 'TOO_LARGE'
@@ -127,6 +124,7 @@ const ACTION_TYPE_MAP = {
   allin: 'A',
   street: 'S',
   show: 'W',
+  muck: 'M',
 } as const satisfies Record<HandAction['t'], string>
 
 /** Single-character action form back to its discriminator value. */
@@ -416,6 +414,7 @@ function validateAction(value: unknown, seats: number, index: number): HandActio
         amount: requireMoney(value['amount'], `${path}.amount`),
       }
     }
+    case 'muck':
     case 'fold':
     case 'check':
       return { t: type, seat: requireSeat(value['seat'], seats, `${path}.seat`) }
@@ -452,7 +451,7 @@ function validateAction(value: unknown, seats: number, index: number): HandActio
 }
 
 /**
- * Check that an arbitrary decoded value really is a `HandRecord` v1 and return
+ * Check that an arbitrary decoded value really is a `HandRecord` v1/v2 and return
  * a freshly built, normalized copy of it. Throws `HandCodecError` with code
  * `INVALID_RECORD` on the first problem found.
  *
@@ -464,8 +463,8 @@ function validateAction(value: unknown, seats: number, index: number): HandActio
 export function assertHandRecord(value: unknown): HandRecord {
   if (!isPlainObject(value)) invalid('Record must be an object.')
 
-  if (value['v'] !== 1) {
-    invalid(`Record version must be 1, got ${JSON.stringify(value['v'])}.`)
+  if (value['v'] !== 1 && value['v'] !== 2) {
+    invalid(`Record version must be 1 or 2, got ${JSON.stringify(value['v'])}.`)
   }
   const id = value['id']
   if (typeof id !== 'string' || !ID_PATTERN.test(id)) {
@@ -496,8 +495,11 @@ export function assertHandRecord(value: unknown): HandRecord {
   if (!Array.isArray(rawActions)) invalid('actions must be an array.')
   const actions = rawActions.map((action, index) => validateAction(action, seats, index))
 
+  if (value['v'] === 1 && actions.some((action) => action.t === 'muck'))
+    invalid('Muck actions require record v2.')
+
   const record: HandRecord = {
-    v: 1,
+    v: value['v'],
     id,
     playedAt,
     game: 'NLHE',
@@ -550,7 +552,7 @@ export function assertHandRecord(value: unknown): HandRecord {
 export function encodeHand(hand: HandRecord): string {
   const json = JSON.stringify(minifyHand(hand))
   const compressed = deflateSync(utf8Encode(json), { level: 9 })
-  return VERSION_PREFIX + base64UrlEncode(compressed)
+  return `v${hand.v}.` + base64UrlEncode(compressed)
 }
 
 /**
@@ -638,18 +640,13 @@ export function decodeHand(payload: string): HandRecord {
   if (typeof payload !== 'string' || payload.length === 0) {
     throw new HandCodecError('MALFORMED', 'Payload is empty.')
   }
-  if (!payload.startsWith(VERSION_PREFIX)) {
-    const match = VERSION_PREFIX_PATTERN.exec(payload)
-    if (match) {
-      throw new HandCodecError(
-        'UNSUPPORTED_VERSION',
-        `Unsupported hand format version "v${match[1]}"; this build reads v1 only.`,
-      )
-    }
+  const match = VERSION_PREFIX_PATTERN.exec(payload)
+  if (!match)
     throw new HandCodecError('MALFORMED', 'Payload does not start with a version prefix.')
-  }
+  if (match[1] !== '1' && match[1] !== '2')
+    throw new HandCodecError('UNSUPPORTED_VERSION', `Unsupported hand format version "v${match[1]}"; this build reads v1 and v2.`)
 
-  const body = payload.slice(VERSION_PREFIX.length)
+  const body = payload.slice(match[0].length)
   if (body.length === 0) throw new HandCodecError('MALFORMED', 'Payload has no body.')
   // Checked before base64 decoding, decompression, UTF-8 decoding and parsing,
   // so an oversized payload costs nothing but a length comparison.
@@ -671,6 +668,8 @@ export function decodeHand(payload: string): HandRecord {
   }
 
   const record = assertHandRecord(expandHand(parsed))
+  if (record.v !== Number(match[1]))
+    throw new HandCodecError('INVALID_RECORD', 'Envelope and record versions do not match.')
 
   // Shape alone is not enough. A record can be perfectly typed and still be
   // impossible poker — two players in one seat, a card dealt twice, or a call

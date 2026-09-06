@@ -1,7 +1,7 @@
 # @smallblind/hand-history
 
 Poker hand history engine for no-limit hold'em: a versioned domain model
-(`HandRecord` v1) plus the card and hand-evaluation core it is built on.
+(`HandRecord` v1/v2) plus the card and hand-evaluation core it is built on.
 
 Pure TypeScript — no React, React Native, Expo, DOM, or Node-only APIs — so the
 same build runs in a browser, in Node, and in a React Native app. It is the
@@ -183,9 +183,36 @@ including the minimum raise and whether the action is even open to it.
 
 ## Format versioning
 
-`HandRecord` carries an explicit `v` field. **Format v1 is the 1.x major line**:
-any breaking change to the recorded shape ships as a new major version of this
-package and a new format version. Consumers should depend on `^1`.
+`HandRecord.v` is `1 | 2` in package 2.x. Existing v1 records retain their
+meaning and continue to decode. New `muck` actions require v2; recorders can
+upgrade a v1 record when its first discard is appended. URL envelopes are
+`v1.` or `v2.` and must match the record inside. Package 1.x rejects v2 at its
+parser/validator boundary, so an older consumer cannot silently ignore a muck.
+Consumers of v2 must upgrade to package 2.x before reading or editing it.
+
+When upgrading from 1.x, handle the new `muck` action in exhaustive action
+handlers and allow both values of `HandRecord.v`. Custom `TableState` fixtures
+need `mucked: []`, and custom `TextLabels` need `actions.muck`. The built-in
+state constructors and English/Korean labels already include these fields.
+These public type changes make this a major package release.
+
+### Showdown discards
+
+`{ t: 'muck', seat }` records a discard after the river betting closes, before
+that seat has shown. Original `players[].cards` remain intact for review;
+`TableState.mucked` carries discards in action order. A discarded hand cannot
+subsequently show. Undo by removing its action restores its previous eligibility.
+
+Each discard removes its seat from contested pots. A pot with one remaining
+claimant is already won without requiring cards, and later discarding those
+cards cannot destroy that pot. This is evaluated per pot, including side pots.
+For example, with main pot A/B/C and side pot A/B, A then B discarding awards
+the main pot to C and the side pot to B. A cannot win either pot with its known
+stronger cards. Manual payouts use the same eligibility and chip-flow checks.
+
+The engine records observed outcomes; it does not enforce house-specific
+requirements to table cards (such as tournament all-in rules). The last-live-hand
+principle is described in [Poker TDA rule 17](https://www.pokertda.com/view-poker-tda-rules/).
 
 ## License
 

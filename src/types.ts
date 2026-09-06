@@ -1,5 +1,5 @@
 /**
- * HandRecord v1 — the wire and storage contract shared by the SmallBlind app,
+ * HandRecord v1/v2 — the wire and storage contract shared by the SmallBlind app,
  * the web replayer, and this engine.
  *
  * Conventions used throughout:
@@ -62,11 +62,13 @@ export type HandAction =
   | { t: 'street'; street: 'flop' | 'turn' | 'river'; cards: string }
   /** A showdown reveal, e.g. `"5c5d"`. */
   | { t: 'show'; seat: number; cards: string }
+  /** Discard at showdown (v2); preserves the originally recorded hole cards. */
+  | { t: 'muck'; seat: number }
 
-/** A complete recorded hand. Format version 1. */
+/** A recorded hand. v1 remains readable; muck actions require v2. */
 export type HandRecord = {
   /** Format version. Bumped only by a breaking change to this shape. */
-  v: 1
+  v: 1 | 2
   /** Stable identifier (63-bit integer as a decimal string). */
   id: string
   /** When the hand was played, epoch milliseconds (UTC). */
@@ -190,6 +192,8 @@ export type TableState = {
   pots: Pot[]
   /** Seats that have folded. */
   folded: number[]
+  /** Showdown discards in action order. Uncontested pots already won are retained. */
+  mucked: number[]
   /** Seats that are all-in. */
   allIn: number[]
   /** Hole cards turned face up by a `show` action, keyed by seat. */

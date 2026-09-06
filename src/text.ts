@@ -49,6 +49,7 @@ export type TextLabels = {
     allin: string
     /** `"{pos} shows {cards}"`. */
     show: string
+    muck: string
   }
   /** `"{pos} wins {amount}"`. */
   wins: string
@@ -84,6 +85,7 @@ export const EN_LABELS: TextLabels = {
     raise: '{pos} raises to {amount}',
     allin: '{pos} all-in {amount}',
     show: '{pos} shows {cards}',
+    muck: '{pos} mucks',
   },
   wins: '{pos} wins {amount}',
   handSuffix: '— {hand}',
@@ -125,6 +127,7 @@ export const KO_LABELS: TextLabels = {
     raise: '{pos} 레이즈 {amount}',
     allin: '{pos} 올인 {amount}',
     show: '{pos} 오픈 {cards}',
+    muck: '{pos} 머크',
   },
   wins: '{pos} {amount} 승리',
   handSuffix: '— {hand}',
@@ -271,6 +274,8 @@ function describeAction(
         pos,
         amount: formatAmount(action.to, currency),
       })
+    case 'muck':
+      return fill(labels.actions.muck, { pos })
     case 'show':
       return fill(labels.actions.show, { pos, cards: formatCards(action.cards) })
     case 'street':

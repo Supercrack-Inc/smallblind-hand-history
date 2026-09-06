@@ -302,7 +302,7 @@ describe('size limits', () => {
 
 describe('errors', () => {
   it('rejects a future format version', () => {
-    expectCode(() => decodeHand(`v2.${encodeHand(fullHand).slice(3)}`), 'UNSUPPORTED_VERSION')
+    expectCode(() => decodeHand(`v3.${encodeHand(fullHand).slice(3)}`), 'UNSUPPORTED_VERSION')
   })
 
   it('rejects a payload with no version prefix', () => {
@@ -385,7 +385,7 @@ describe('errors', () => {
 
   it('rejects an unknown action type and a bad action shape', () => {
     expectCode(
-      () => decodeHand(encodeRaw({ ...fullHand, actions: [{ t: 'muck', seat: 0 }] })),
+      () => decodeHand(encodeRaw({ ...fullHand, actions: [{ t: 'dance', seat: 0 }] })),
       'INVALID_RECORD',
     )
     expectCode(
@@ -409,7 +409,7 @@ describe('errors', () => {
   })
 
   it('rejects a wrong record version inside the envelope', () => {
-    expectCode(() => decodeHand(encodeRaw({ ...fullHand, v: 2 })), 'INVALID_RECORD')
+    expectCode(() => decodeHand(encodeRaw({ ...fullHand, v: 2 }).replace('v2.', 'v1.')), 'INVALID_RECORD')
   })
 
   it('rejects out-of-range table sizes and non-integer timestamps', () => {
@@ -785,7 +785,7 @@ describe('key table', () => {
     seen.add('allin')
     for (const type of seen) expect(HAND_CODEC_ACTION_TYPE_MAP[type]).toBeDefined()
     expect(Object.keys(HAND_CODEC_ACTION_TYPE_MAP).sort()).toEqual(
-      ['allin', 'bet', 'call', 'check', 'fold', 'post', 'raise', 'show', 'street'].sort(),
+      ['allin', 'bet', 'call', 'check', 'fold', 'muck', 'post', 'raise', 'show', 'street'].sort(),
     )
   })
 

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-07
+
+### Breaking changes
+
+- `HandRecord.v` is now `1 | 2`, and `HandAction` includes
+  `{ t: 'muck', seat }`. Consumers must handle both record versions and add
+  `muck` to exhaustive action handlers.
+- `TableState.mucked` and `TextLabels.actions.muck` are required fields.
+  Update custom state fixtures and text labels when upgrading from 1.x.
+- New muck records and their URL envelopes use v2. Package 1.x rejects them;
+  upgrade readers and editors to 2.x before consuming v2 records. Existing v1
+  records retain their meaning and remain readable without migration.
+
+### Added
+
+- Showdown discards preserve the recorded hole cards while removing the seat
+  from contested pots. Replay, validation, English/Korean text and URL codecs
+  all support the new action.
+- Pot eligibility follows discard order, including side pots and manual
+  payouts. An uncontested pot stays won if its last claimant later discards.
+  Removing a muck action restores that seat's previous eligibility.
+- Regression coverage for discarded winning cards, last-claimant payouts,
+  side pots, odd chips, invalid discards, undo and v1/v2 codec compatibility.
+
 ## [1.1.0] - 2026-09-03
 
 ### Added

@@ -189,7 +189,7 @@ function recordCards(hand: HandRecord) {
 export function validateRecordStatic(hand: HandRecord): ValidationError[] {
   const errors: ValidationError[] = []
 
-  if (hand.v !== 1) {
+  if (hand.v !== 1 && hand.v !== 2) {
     errors.push(error('bad-version', `Unsupported record version: ${hand.v}`))
   }
 
@@ -387,6 +387,10 @@ export function validateRecordStatic(hand: HandRecord): ValidationError[] {
           seat: action.seat,
         }),
       )
+    }
+
+    if (action.t === 'muck' && hand.v !== 2) {
+      errors.push(error('bad-version', 'Muck actions require record v2', { step }))
     }
 
     if (action.t === 'show' && !isValidCards(action.cards, 2)) {
@@ -696,6 +700,7 @@ export function validateAction(
   if (
     action.t !== 'post' &&
     action.t !== 'show' &&
+    action.t !== 'muck' &&
     action.t !== 'street' &&
     state.street === 'preflop' &&
     state.betting.actedSeats.length === 0
@@ -925,7 +930,20 @@ export function validateAction(
       return null
     }
 
+    case 'muck': {
+      if (hand.v !== 2)
+        return error('bad-version', 'Muck actions require record v2', { step: state.step })
+      if (state.board.length !== 10 || state.actingSeat !== null ||
+          state.mucked.includes(action.seat) || state.revealed[action.seat])
+        return error('illegal-action', 'Muck requires an unrevealed live hand at a closed showdown', {
+          step: state.step, seat: action.seat,
+        })
+      return null
+    }
+
     case 'show': {
+      if (state.mucked.includes(action.seat))
+        return error('illegal-action', 'A mucked hand cannot be shown', { step: state.step, seat: action.seat })
       if (!isValidCards(action.cards, 2)) {
         return error('bad-cards', `Invalid hole cards: ${action.cards}`, {
           step: state.step,
